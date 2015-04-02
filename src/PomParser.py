@@ -6,6 +6,7 @@ Created on 31 Mar 2015
 
 from xml.dom.minidom import parse
 from src.pom.Pom import PomDependency, Pom
+from ctypes import cast
 
 class PomParser(object):
     '''
@@ -51,9 +52,57 @@ class PomParser(object):
             
         return Pom(pomGrp, pomArt, pomVer, file, parent, pomDeps, pomMods)
     
-class PomStructure(object):
+class TreeNode(object):
 
-    def __init__(self):
-        ''''''
+    parentNode = None
+    data = None
+    _childNodes = []
     
+    def __init__(self, data, childnodes = [], parent = None):
+        self.parentNode = parent
+        self._childNodes = childnodes
+        self.data = data
+    
+    def getData(self):
+        return self.data
+    
+    def getParent(self):
+        return self.parentNode
+    
+    def getChildNodes(self):
+        return self._childNodes
+    
+    def addChildNode(self, node):
+        assert type(node) is TreeNode
+        assert type(node.getData) is Pom
+        self._childNodes.append(node)
+    
+    def addParentNode(self, node):
+        self.parentNode = node
         
+class TreeCreation(object):
+    
+    rootNode = None
+    nodes = []
+    
+    def __init__(self, listOfPoms):
+        arts = {}
+        for pom in listOfPoms:
+            
+            
+            
+            arts[pom.getArtifactId()] = pom
+        self.findRootParent(arts)
+        ''' '''
+        
+        
+    def findRootParent(self, arts):
+        for val in arts.itervalues():
+            assert type(val) is Pom
+            par = val.getParent()
+            assert type(par) is Pom
+            if par:
+                par.getArtifactId()
+    
+    def getRootNode(self):
+        return self.rootNode    
