@@ -18,44 +18,65 @@ class PomParser(object):
         
     def parseFilesToPomPOPO(self, listOfFileLocs):
         popos = []
-        for file in listOfFileLocs:
-            tmpDom = parse(file)
-            popos.append(self.DomToPOPO(tmpDom, file))
-            tmpDom.unlink()
-        return popos   
+        current = None
+        try:
+            for file in listOfFileLocs:
+                current = file
+                tmpDom = parse(file)
+                if tmpDom:
+                    popos.append(self.DomToPOPO(tmpDom, file))
+                    tmpDom.unlink()
+            return popos   
+        except Exception:
+            raise PomParseError("Parser was unable to parse from file location: " + current)
+            
     
     def DomToPOPO(self, dom, file):
         pomDeps = []
-        
+        parent = None
         par = dom.getElementsByTagName("parent")
-        grp = par.getAttribute("groupId")
-        art = par.getAttribute("artifactId")
-        ver = par.getAttribute("version")
-        relPath = par.getAttribute("relativePath")
-        parent = Pom(grp, art, ver, relPath)
-            
-        pomGrp = dom.getElementsByTagName("groupId")
-        pomArt = dom.getElementsByTagName("artifactId")
-        pomVer = dom.getElementsByTagName("version")
+        if par:
+            par = par[0]
+            grp = self.getNodeValue(par.getElementsByTagName("groupId"))
+            art = self.getNodeValue(par.getElementsByTagName("artifactId"))
+            ver = self.getNodeValue(par.getElementsByTagName("version"))
+            relPath = self.getNodeValue(par.getElementsByTagName("relativePath"))
+            parent = Pom(grp, art, ver, relPath)
+                
+        pomGrp = self.getNodeValue(dom.getElementsByTagName("groupId"))
+        pomArt = self.getNodeValue(dom.getElementsByTagName("artifactId"))
+        pomVer = self.getNodeValue(dom.getElementsByTagName("version"))
         
         depMan = dom.getElementsByTagName("dependencyManagement")
         if depMan:
             deps = depMan.getElementsByTagName("dependencies")
         else:
             deps = dom.getElementsByTagName("dependencies")
-            
-        for dep in deps:
-            depGrp = dep.getAttribute("groupId")
-            depArt = dep.getAttribute("artifactId")
-            depVer = dep.getAttribute("version")
-            pomDeps.append(PomDependency(depGrp, depArt, depVer))
         
+        for no in deps:
+            tmps = no.getElementsByTagName("dependency")
+            for dep in tmps:
+                #dep = tmp.getElementsByTagName("dependency")
+                if dep:
+                    depGrp = self.getNodeValue(dep.getElementsByTagName("groupId"))
+                    depArt = self.getNodeValue(dep.getElementsByTagName("artifactId"))
+                    depVer = self.getNodeValue(dep.getElementsByTagName("version"))
+                    pomDeps.append(PomDependency(depGrp, depArt, depVer))
+            
         mods = dom.getElementsByTagName("modules")
         pomMods = []
         for mod in mods:
-            pomMods.append(mod.getAttribute("module"))
+            pomMods.append(self.getNodeValue(mod.getElementsByTagName("module")))
             
         return Pom(pomGrp, pomArt, pomVer, file, parent, pomDeps, pomMods)
+    
+    def getNodeValue(self, elementByTag):
+        if elementByTag:
+            if len(elementByTag) > 0:
+                elementByTag = elementByTag[0]
+                if len(elementByTag.childNodes) > 0:
+                    elementByTag = elementByTag.childNodes[0]
+                    return elementByTag.nodeValue
     
 class PomTreeNode(object):
 
@@ -128,7 +149,7 @@ class TreeCreation(object):
             if pom.getParentPom():
                 parPom = pom.getParentPom()
                 parPomNode = PomTreeNode(parPom.getArtifactId(), parPom.getGroupId())
-                par = self.inNodeList(parPomNode)
+                par = self.inNodeList(nodeList, parPomNode)
                 if not par:
                     par = parPomNode
                 nodeList.append(par)
@@ -136,7 +157,7 @@ class TreeCreation(object):
             ''' #################### '''
                 
             ''' If node is in found list then use that, if not make a new one'''
-            found = self.inNodeList(tmpnode)
+            found = self.inNodeList(nodeList, tmpnode)
             if found:
                 tmpnode = found
                 if not tmpnode.getData():
@@ -162,6 +183,8 @@ class TreeCreation(object):
             ''' ################### '''
             nodeList.append(tmpnode)
         self.nodeList = nodeList
+        self.resolveRootNode()
+        ''' Count number of layers maybe?'''
     
     def inNodeList(self, nodeList, nodeToFind):
         for node in nodeList:
@@ -176,12 +199,13 @@ class TreeCreation(object):
                 active = self.nodeList[0]
                 assert type(active) is PomTreeNode
                 # May need more work
-                self.resolveRootNode(active)    
+                self.resolveNodeRelations(active)
             else:
                 self.rootNode = self.nodeList[0]
                 return                
         else:
             ''' throw exception'''
+            raise PomParseError("Resolution of RootNode failed as the structure is empty")
     
     def resolveNodeRelations(self, node):
         if node.getParent():
@@ -194,3 +218,11 @@ class TreeCreation(object):
             
     def getRootNode(self):
         return self.rootNode    
+    
+class PomParseError(Exception):
+    
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)

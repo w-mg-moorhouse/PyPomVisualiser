@@ -5,6 +5,7 @@ Created on 31 Mar 2015
 '''
 from ProjectScraper import ProjectScraper
 from src.PomParser import PomParser
+from src.PomParser import TreeCreation
 
 class ProjectActions(object):
     '''
@@ -29,5 +30,7 @@ class ProjectActions(object):
         ''' Process POPOs to determine dependencies '''
         
         ''' Create POPO structure '''
-        
+        root = TreeCreation(pomPOPOs).getRootNode()
+        print(root.getArtifactId())
+        print("Finished gracefully")
         ''' Pass POPO structure to visualiser '''
