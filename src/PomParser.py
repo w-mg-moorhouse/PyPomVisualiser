@@ -6,7 +6,6 @@ Created on 31 Mar 2015
 
 from xml.dom.minidom import parse
 from src.pom.Pom import PomDependency, Pom
-from ctypes import cast
 
 class PomParser(object):
     '''
@@ -38,7 +37,13 @@ class PomParser(object):
         pomGrp = dom.getElementsByTagName("groupId")
         pomArt = dom.getElementsByTagName("artifactId")
         pomVer = dom.getElementsByTagName("version")
-        deps = dom.getElementsByTagName("dependencies")
+        
+        depMan = dom.getElementsByTagName("dependencyManagement")
+        if depMan:
+            deps = depMan.getElementsByTagName("dependencies")
+        else:
+            deps = dom.getElementsByTagName("dependencies")
+            
         for dep in deps:
             depGrp = dep.getAttribute("groupId")
             depArt = dep.getAttribute("artifactId")
@@ -52,15 +57,30 @@ class PomParser(object):
             
         return Pom(pomGrp, pomArt, pomVer, file, parent, pomDeps, pomMods)
     
-class TreeNode(object):
+class PomTreeNode(object):
 
     parentNode = None
     data = None
+    artifactId = None
+    groupId = None
+    ''' stores a set of keys'''
     _childNodes = []
+    _reverseChildren = []
     
-    def __init__(self, data, childnodes = [], parent = None):
+    def __init__(self, artId, groupId, data=None, childnodes=[], parent=None):
+        self.artifactId = artId
+        self.groupId = groupId
         self.parentNode = parent
         self._childNodes = childnodes
+        self.data = data
+    
+    def getGroupId(self):
+        return self.groupId
+    
+    def getArtifactId(self):
+        return self.artifactId
+
+    def setData(self, data):
         self.data = data
     
     def getData(self):
@@ -69,40 +89,108 @@ class TreeNode(object):
     def getParent(self):
         return self.parentNode
     
+    def setParentNode(self, node):
+        self.parentNode = node
+
     def getChildNodes(self):
         return self._childNodes
     
     def addChildNode(self, node):
-        assert type(node) is TreeNode
-        assert type(node.getData) is Pom
+        assert type(node) is PomTreeNode
         self._childNodes.append(node)
     
-    def addParentNode(self, node):
-        self.parentNode = node
+    def getReverseChildNodes(self):
+        return self._reverseChildren
+    
+    def addReverseChildNode(self, node):
+        assert type(node) is PomTreeNode
+        self._reverseChildren.append(node)
+    
         
 class TreeCreation(object):
     
     rootNode = None
-    nodes = []
+    nodeList = []
     
     def __init__(self, listOfPoms):
-        arts = {}
-        for pom in listOfPoms:
-            
-            
-            
-            arts[pom.getArtifactId()] = pom
-        self.findRootParent(arts)
         ''' '''
+        self.resolveTreeStructure(listOfPoms)
         
-        
-    def findRootParent(self, arts):
-        for val in arts.itervalues():
-            assert type(val) is Pom
-            par = val.getParent()
-            assert type(par) is Pom
-            if par:
-                par.getArtifactId()
+                
+    def resolveTreeStructure(self, listOfPoms):
+        nodeList = []
+        for pom in listOfPoms:
+            pomArt = pom.getArtifactId()
+            pomGrp = pom.getGroupId()
+            tmpnode = PomTreeNode(pomArt, pomGrp, pom)
+            
+            '''determines if pom has parent, if it does, determine if in nodeList and add as parentNode'''
+            if pom.getParentPom():
+                parPom = pom.getParentPom()
+                parPomNode = PomTreeNode(parPom.getArtifactId(), parPom.getGroupId())
+                par = self.inNodeList(parPomNode)
+                if not par:
+                    par = parPomNode
+                nodeList.append(par)
+                tmpnode.setParentNode(par)
+            ''' #################### '''
+                
+            ''' If node is in found list then use that, if not make a new one'''
+            found = self.inNodeList(tmpnode)
+            if found:
+                tmpnode = found
+                if not tmpnode.getData():
+                    tmpnode.setData(pom)
+            ''' #################### '''
+            
+            ''' determine if any nodes match the dependencies and then add child nodes accordingly'''
+            for dep in pom.getDependencies():
+                for inner in listOfPoms:
+                    if (inner.getGroupId() is dep.getGroupId()) and (inner.getArtifactId() is dep.getArtifactId()):                        
+                        ''' inner is dependency, make node which refers to this.'''
+                        innerNode = PomTreeNode(inner.getArtifactId, inner.getGroupId())
+                        foundNode = self.inNodeList(nodeList, innerNode)
+                        if not foundNode:
+                            nodeList.append(innerNode)
+                            foundNode = innerNode    
+                        # Add reverse dependency assignment
+                        tmpnode.addChildNode(foundNode)
+                        foundNode.addReverseChildNode(tmpnode)
+                        break
+                # TODO cater for external dependencies
+                
+            ''' ################### '''
+            nodeList.append(tmpnode)
+        self.nodeList = nodeList
     
+    def inNodeList(self, nodeList, nodeToFind):
+        for node in nodeList:
+            if (node.getGroupId() is nodeToFind.getGroupId()) and (node.getArtifactId() is nodeToFind.getArtifactId()):
+                return node
+    
+    def resolveRootNode(self):
+        length = len(self.nodeList)
+        if length > 0:
+            if length is not 1:
+                ''' more than 1 node'''
+                active = self.nodeList[0]
+                assert type(active) is PomTreeNode
+                # May need more work
+                self.resolveRootNode(active)    
+            else:
+                self.rootNode = self.nodeList[0]
+                return                
+        else:
+            ''' throw exception'''
+    
+    def resolveNodeRelations(self, node):
+        if node.getParent():
+            self.amIRootNode(node.getParent)
+        elif node.getReverseChildNodes():
+            ''' Needs to follow these, maybe one, maybe all'''
+        else:
+            self.rootNode = node
+            ''' Could be root node'''
+            
     def getRootNode(self):
         return self.rootNode    

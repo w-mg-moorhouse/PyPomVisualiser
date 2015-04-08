@@ -20,16 +20,19 @@ class Visualiser(object):
     
     def visualisePomStructure(self, rootNode):
         ''' calculate number of nodes '''
-        
+        if rootNode:
+            self.drawNode(rootNode, 0)
+            
         ''' iterate over pom dependency structure'''
+    def drawNode(self, node, level):
+        
+        ''' node.get name etc render at this level'''
+        
+        
+        if node.getChildNodes():
+            for child in node.getChildNodes():
+                self.drawNode(child, level+1)
         
     def renderNode(self, node):
-        self._display.drawSquare(x_loc, y_loc, width, height)
-        
-class RenderedObject(object):
-    
-    def __init__(self, x_pos, y_pos, width, height):
-        self.x1_pos = x_pos
-        self.x2_pos = y_pos
-        self.width = width
-        self.height = height
+        #self._display.drawSquare(x_loc, y_loc, width, height)
+        print(node.getArtifactId())

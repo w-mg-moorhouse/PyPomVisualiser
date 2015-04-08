@@ -38,6 +38,9 @@ class Pom(object):
     def getArtifactId(self):
         return self._artifactId
     
+    def getParentPom(self):
+        return self._parent
+        
     def getVersion(self):
         return self._version
     
