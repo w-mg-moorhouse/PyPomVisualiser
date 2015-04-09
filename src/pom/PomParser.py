@@ -85,14 +85,15 @@ class PomTreeNode(object):
     artifactId = None
     groupId = None
     ''' stores a set of keys'''
+    _dependencyNodes = []
+    _reverseDependencies = []
     _childNodes = []
-    _reverseChildren = []
     
-    def __init__(self, artId, groupId, data=None, childnodes=[], parent=None):
+    def __init__(self, artId, groupId, data=None, dependencyNodes=[], parent=None):
         self.artifactId = artId
         self.groupId = groupId
         self.parentNode = parent
-        self._childNodes = childnodes
+        self._dependencyNodes = dependencyNodes
         self.data = data
     
     def getGroupId(self):
@@ -113,19 +114,26 @@ class PomTreeNode(object):
     def setParentNode(self, node):
         self.parentNode = node
 
+    # reverse parent idea
+    def addChildNodes(self, node):
+        self._childNodes.append(node)
+        
     def getChildNodes(self):
         return self._childNodes
     
-    def addChildNode(self, node):
-        assert type(node) is PomTreeNode
-        self._childNodes.append(node)
+    def getDependencies(self):
+        return self._dependencyNodes
     
-    def getReverseChildNodes(self):
-        return self._reverseChildren
-    
-    def addReverseChildNode(self, node):
+    def addDependencyNode(self, node):
         assert type(node) is PomTreeNode
-        self._reverseChildren.append(node)
+        self._dependencyNodes.append(node)
+    
+    def getReverseDependencyNodes(self):
+        return self._reverseDependencies
+    
+    def addReverseDependencyNode(self, node):
+        assert type(node) is PomTreeNode
+        self._reverseDependencies.append(node)
     
         
 class TreeCreation(object):
@@ -154,6 +162,7 @@ class TreeCreation(object):
                     par = parPomNode
                 nodeList.append(par)
                 tmpnode.setParentNode(par)
+                par.addChildNodes(tmpnode)
             ''' #################### '''
                 
             ''' If node is in found list then use that, if not make a new one'''
@@ -175,8 +184,8 @@ class TreeCreation(object):
                             nodeList.append(innerNode)
                             foundNode = innerNode    
                         # Add reverse dependency assignment
-                        tmpnode.addChildNode(foundNode)
-                        foundNode.addReverseChildNode(tmpnode)
+                        tmpnode.addDependencyNode(foundNode)
+                        foundNode.addReverseDependencyNode(tmpnode)
                         break
                 # TODO cater for external dependencies
                 
@@ -210,7 +219,7 @@ class TreeCreation(object):
     def resolveNodeRelations(self, node):
         if node.getParent():
             self.amIRootNode(node.getParent)
-        elif node.getReverseChildNodes():
+        elif node.getReverseDependencyNodes():
             ''' Needs to follow these, maybe one, maybe all'''
         else:
             self.rootNode = node

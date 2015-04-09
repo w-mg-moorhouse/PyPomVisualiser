@@ -4,7 +4,8 @@ Created on 31 Mar 2015
 @author: WMOORHOU
 '''
 from os import name
-from display.Win32Display import Win32Display
+
+from src.display.Win32Display import *
 
 class DisplayFactory(object):
     '''
@@ -20,3 +21,27 @@ class DisplayFactory(object):
             return
         
         
+from abc import ABCMeta, abstractmethod
+
+class Display:
+    __metaclass__ = ABCMeta
+    
+    @abstractmethod
+    def drawSquare(self, x_loc, y_loc, width, height):
+        pass
+    
+    @abstractmethod
+    def drawCircle(self, x_loc, y_loc, width, height):
+        pass
+    
+    @abstractmethod
+    def drawLine(self):
+        pass
+    
+    @abstractmethod
+    def runDisplay(self):
+        pass
+        
+    @abstractmethod    
+    def remove(self, num):
+        pass
