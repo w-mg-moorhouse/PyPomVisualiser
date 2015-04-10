@@ -11,7 +11,7 @@ class Win32Display(Display):
     '''
     classdocs
     '''
-    local_canv = None
+    
     
     '''
     Constructor
@@ -28,28 +28,30 @@ class Win32Display(Display):
         self._sampleDraw()
         ''''''
     @abstractmethod    
-    def drawSquare(self, x_loc, y_loc, width, height):
+    def drawSquare(self, x_loc, y_loc, width, height, colour=None, function=None):
         x2 = x_loc + width
         y2 = y_loc + height
-        print("SQUARE")
-        return self.local_canv.create_rectangle(x_loc, y_loc, x2, y2, width=self.lineThickness)
+        return self.local_canv.create_rectangle(x_loc, y_loc, x2, y2, width=self.lineThickness, fill=colour)
     
     @abstractmethod
-    def drawCircle(self, x_loc, y_loc, width, height, function=None):
+    def drawCircle(self, x_loc, y_loc, width, height, colour=None, function=None):
         if not function:
-            print("circle")
-            return self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness)
+            return self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness, fill=colour)
         else:
-            circle = self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness)
+            circle = self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness, fill=colour)
             # self.local_canv.tag_bind(circle, "", function)
             return circle
     
     def _sampleDraw(self):
         self.local_canv.create_oval(0, 0, 0, 0, width=0)
     
+    def drawText(self, x, y, width, content):
+        val = self.local_canv.create_text(x, y, width=width, text=content)
+        self.local_canv.tag_raise(val)
+        return val
+    
     @abstractmethod
     def drawLine(self, x1, y1, x2, y2):
-        print("Drawing line")
         line = self.local_canv.create_line(x1, y1, x2, y2, width=self.lineThickness)
         self.local_canv.tag_lower(line)
         return line
@@ -61,11 +63,6 @@ class Win32Display(Display):
         id2tuple = self.getCoords(id2)
         x2 = id2tuple[0] + ((id2tuple[2] - id2tuple[0])/2)
         y2 = id2tuple[1] + ((id2tuple[3] - id2tuple[1])/2)
-        print("x1 " + str(x1))
-        print("y1 " + str(y1))
-        print("x2 " + str(x2))
-        print("y2 " + str(y2))
-        
         return self.drawLine(x1, y1, x2, y2)
     
     @abstractmethod

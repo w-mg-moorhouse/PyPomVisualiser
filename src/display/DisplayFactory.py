@@ -27,11 +27,11 @@ class Display:
     __metaclass__ = ABCMeta
     
     @abstractmethod
-    def drawSquare(self, x_loc, y_loc, width, height):
+    def drawSquare(self, x_loc, y_loc, width, height, colour=None, function=None):
         pass
     
     @abstractmethod
-    def drawCircle(self, x_loc, y_loc, width, height):
+    def drawCircle(self, x_loc, y_loc, width, height, colour=None, function=None):
         pass
     
     @abstractmethod

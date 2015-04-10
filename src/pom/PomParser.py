@@ -6,27 +6,30 @@ Created on 31 Mar 2015
 
 from xml.dom.minidom import parse
 from src.pom.Pom import PomDependency, Pom
+from src.pom.PomTreeNode import PomTreeNode
+from enum import Enum
+from test.test_tarfile import tmpname
 
 class PomParser(object):
     '''
     classdocs
     '''
     def __init__(self):
+        self.popos = []
+        self.current = None
         '''
         Constructor
         '''
         
     def parseFilesToPomPOPO(self, listOfFileLocs):
-        popos = []
-        current = None
         try:
             for file in listOfFileLocs:
                 current = file
                 tmpDom = parse(file)
                 if tmpDom:
-                    popos.append(self.DomToPOPO(tmpDom, file))
+                    self.popos.append(self.DomToPOPO(tmpDom, file))
                     tmpDom.unlink()
-            return popos   
+            return self.popos   
         except Exception:
             raise PomParseError("Parser was unable to parse from file location: " + current)
             
@@ -56,7 +59,6 @@ class PomParser(object):
         for no in deps:
             tmps = no.getElementsByTagName("dependency")
             for dep in tmps:
-                #dep = tmp.getElementsByTagName("dependency")
                 if dep:
                     depGrp = self.getNodeValue(dep.getElementsByTagName("groupId"))
                     depArt = self.getNodeValue(dep.getElementsByTagName("artifactId"))
@@ -77,128 +79,92 @@ class PomParser(object):
                 if len(elementByTag.childNodes) > 0:
                     elementByTag = elementByTag.childNodes[0]
                     return elementByTag.nodeValue
-    
-class PomTreeNode(object):
-
-    parentNode = None
-    data = None
-    artifactId = None
-    groupId = None
-    ''' stores a set of keys'''
-    _dependencyNodes = []
-    _reverseDependencies = []
-    _childNodes = []
-    
-    def __init__(self, artId, groupId, data=None, dependencyNodes=[], parent=None):
-        self.artifactId = artId
-        self.groupId = groupId
-        self.parentNode = parent
-        self._dependencyNodes = dependencyNodes
-        self.data = data
-    
-    def getGroupId(self):
-        return self.groupId
-    
-    def getArtifactId(self):
-        return self.artifactId
-
-    def setData(self, data):
-        self.data = data
-    
-    def getData(self):
-        return self.data
-    
-    def getParent(self):
-        return self.parentNode
-    
-    def setParentNode(self, node):
-        self.parentNode = node
-
-    # reverse parent idea
-    def addChildNodes(self, node):
-        self._childNodes.append(node)
-        
-    def getChildNodes(self):
-        return self._childNodes
-    
-    def getDependencies(self):
-        return self._dependencyNodes
-    
-    def addDependencyNode(self, node):
-        assert type(node) is PomTreeNode
-        self._dependencyNodes.append(node)
-    
-    def getReverseDependencyNodes(self):
-        return self._reverseDependencies
-    
-    def addReverseDependencyNode(self, node):
-        assert type(node) is PomTreeNode
-        self._reverseDependencies.append(node)
-    
         
 class TreeCreation(object):
     
-    rootNode = None
-    nodeList = []
-    
     def __init__(self, listOfPoms):
         ''' '''
+        self.rootNode = None
+        self.nodeList = []
         self.resolveTreeStructure(listOfPoms)
-        
                 
     def resolveTreeStructure(self, listOfPoms):
-        nodeList = []
         for pom in listOfPoms:
             pomArt = pom.getArtifactId()
             pomGrp = pom.getGroupId()
-            tmpnode = PomTreeNode(pomArt, pomGrp, pom)
             
-            '''determines if pom has parent, if it does, determine if in nodeList and add as parentNode'''
+            print (pomArt)
+            print (pomGrp)
+            
+            ''' If node is in found list then use that, if not make a new one'''
+            tmpnode = self.getNodeWith(pomArt, pomGrp)
+            if tmpnode == None:
+                tmpnode = PomTreeNode(pomArt, pomGrp, NodeEnum.USERPOM, pom)
+                self.nodeList.append(tmpnode)
+            if tmpnode.getData() == None:
+                tmpnode.setData(pom)
+            ''' ####################'''
+                    
+            '''        
+            parentPom = pom.getParentPom()
+            if parentPom != None:
+                grpId = parentPom.getGroupId()
+                artId = parentPom.getArtifactId()
+                parentPom1 = self.getNodeWith(artId, grpId)
+                if parentPom1 != None:
+                    tmpnode.setParentNode(parentPom1)
+                else:
+                    parentPom1 = PomTreeNode(artId, grpId, NodeEnum.USERPOM, None)
+                    self.nodeList.append(parentPom1)
+                    tmpnode.setParentNode(parentPom1)
+            '''        
+                    
+            '''determines if pom has parent, if it does, determine if in nodeList and add as parentNode '''
             if pom.getParentPom():
                 parPom = pom.getParentPom()
-                parPomNode = PomTreeNode(parPom.getArtifactId(), parPom.getGroupId())
-                par = self.inNodeList(nodeList, parPomNode)
-                if not par:
-                    par = parPomNode
-                nodeList.append(par)
+                par = self.inNodeList(self.nodeList, PomTreeNode(parPom.getArtifactId(), parPom.getGroupId(), NodeEnum.USERPOM, None))
                 tmpnode.setParentNode(par)
                 par.addChildNodes(tmpnode)
-            ''' #################### '''
+            '''#################### '''
                 
-            ''' If node is in found list then use that, if not make a new one'''
-            found = self.inNodeList(nodeList, tmpnode)
-            if found:
-                tmpnode = found
-                if not tmpnode.getData():
-                    tmpnode.setData(pom)
-            ''' #################### '''
             
-            ''' determine if any nodes match the dependencies and then add child nodes accordingly'''
+            ''' determine if any nodes match the dependencies and then add dep nodes accordingly'''
             for dep in pom.getDependencies():
+                notfound = True
                 for inner in listOfPoms:
-                    if (inner.getGroupId() is dep.getGroupId()) and (inner.getArtifactId() is dep.getArtifactId()):                        
+                    if (inner.getGroupId() == dep.getGroupId()) and (inner.getArtifactId() == dep.getArtifactId()):                        
                         ''' inner is dependency, make node which refers to this.'''
-                        innerNode = PomTreeNode(inner.getArtifactId, inner.getGroupId())
-                        foundNode = self.inNodeList(nodeList, innerNode)
-                        if not foundNode:
-                            nodeList.append(innerNode)
-                            foundNode = innerNode    
-                        # Add reverse dependency assignment
+                        foundNode = self.inNodeList(self.nodeList, PomTreeNode(inner.getArtifactId, inner.getGroupId(), NodeEnum.USERPOM, None)) 
                         tmpnode.addDependencyNode(foundNode)
                         foundNode.addReverseDependencyNode(tmpnode)
+                        notfound = False
                         break
-                # TODO cater for external dependencies
+                # Add reverse dependency assignment
+                if notfound is True:
+                    depNode = self.inNodeList(self.nodeList, PomTreeNode(dep.getArtifactId(), dep.getGroupId(), NodeEnum.EXTDEP, None))
+                    tmpnode.addDependencyNode(depNode)
+                    depNode.addReverseDependencyNode(tmpnode)
+                    pass
                 
             ''' ################### '''
-            nodeList.append(tmpnode)
-        self.nodeList = nodeList
+            #self.nodeList.append(tmpnode)
         self.resolveRootNode()
         ''' Count number of layers maybe?'''
     
+    def getNodeWith(self,artId, grpId):
+        
+        for temporaryNode in self.nodeList:
+            if (temporaryNode.getGroupId() == grpId) and (temporaryNode.getArtifactId() == artId):
+                return temporaryNode
+    
+    
     def inNodeList(self, nodeList, nodeToFind):
         for node in nodeList:
-            if (node.getGroupId() is nodeToFind.getGroupId()) and (node.getArtifactId() is nodeToFind.getArtifactId()):
+            if (node.getGroupId() == nodeToFind.getGroupId()) and (node.getArtifactId() == nodeToFind.getArtifactId()):
+                self.nodeList.append(node)
                 return node
+        self.nodeList.append(nodeToFind)
+        return nodeToFind
     
     def resolveRootNode(self):
         length = len(self.nodeList)
@@ -216,18 +182,28 @@ class TreeCreation(object):
             ''' throw exception'''
             raise PomParseError("Resolution of RootNode failed as the structure is empty")
     
-    def resolveNodeRelations(self, node):
-        if node.getParent():
-            self.amIRootNode(node.getParent)
-        elif node.getReverseDependencyNodes():
+    def resolveNodeRelations(self, potentialRootNode):
+        
+        parent = potentialRootNode.getParent()
+        if parent != None:
+            print(parent.getArtifactId())
+            self.resolveNodeRelations(parent)
+        elif potentialRootNode.getReverseDependencyNodes():
+            print("rev dep nodes")
             ''' Needs to follow these, maybe one, maybe all'''
         else:
-            self.rootNode = node
+            self.rootNode = potentialRootNode
+            print("Root node chosen: " + potentialRootNode.getArtifactId() + " " + potentialRootNode.getGroupId())
+            
             ''' Could be root node'''
             
     def getRootNode(self):
         return self.rootNode    
-    
+
+class NodeEnum(Enum):
+    EXTDEP = "green"
+    USERPOM = "#0080FF"
+
 class PomParseError(Exception):
     
     def __init__(self, value):
