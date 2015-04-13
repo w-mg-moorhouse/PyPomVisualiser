@@ -7,7 +7,7 @@ from tkinter import Tk, Canvas, Scrollbar
 from src.display.DisplayFactory import Display
 from abc import abstractmethod
 
-class Win32Display(Display):
+class TKinterDisplay(Display):
     '''
     classdocs
     '''
@@ -51,19 +51,19 @@ class Win32Display(Display):
         return val
     
     @abstractmethod
-    def drawLine(self, x1, y1, x2, y2):
-        line = self.local_canv.create_line(x1, y1, x2, y2, width=self.lineThickness)
+    def drawLine(self, x1, y1, x2, y2, colour="black"):
+        line = self.local_canv.create_line(x1, y1, x2, y2, width=self.lineThickness, arrow="first", fill=colour)
         self.local_canv.tag_lower(line)
         return line
     
-    def connectIdWithLine(self, id1, id2):
+    def connectIdWithLine(self, id1, id2, colour=None):
         id1tuple = self.getCoords(id1)
         x1 = id1tuple[0] + ((id1tuple[2] - id1tuple[0])/2)
         y1 = id1tuple[1] + ((id1tuple[3] - id1tuple[1])/2)
         id2tuple = self.getCoords(id2)
         x2 = id2tuple[0] + ((id2tuple[2] - id2tuple[0])/2)
         y2 = id2tuple[1] + ((id2tuple[3] - id2tuple[1])/2)
-        return self.drawLine(x1, y1, x2, y2)
+        return self.drawLine(x1, y1, x2, y2, colour)
     
     @abstractmethod
     def remove(self, num):

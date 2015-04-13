@@ -8,7 +8,7 @@ from xml.dom.minidom import parse
 from src.pom.Pom import PomDependency, Pom
 from src.pom.PomTreeNode import PomTreeNode
 from enum import Enum
-from test.test_tarfile import tmpname
+import xml.etree.ElementTree as ET
 
 class PomParser(object):
     '''
@@ -22,7 +22,7 @@ class PomParser(object):
         '''
         
     def parseFilesToPomPOPO(self, listOfFileLocs):
-        try:
+        #try:
             for file in listOfFileLocs:
                 current = file
                 tmpDom = parse(file)
@@ -30,25 +30,42 @@ class PomParser(object):
                     self.popos.append(self.DomToPOPO(tmpDom, file))
                     tmpDom.unlink()
             return self.popos   
-        except Exception:
-            raise PomParseError("Parser was unable to parse from file location: " + current)
-            
+        #except Exception:
+            #raise PomParseError("Parser was unable to parse from file location: " + current)
     
     def DomToPOPO(self, dom, file):
         pomDeps = []
         parent = None
         par = dom.getElementsByTagName("parent")
         if par:
-            par = par[0]
-            grp = self.getNodeValue(par.getElementsByTagName("groupId"))
-            art = self.getNodeValue(par.getElementsByTagName("artifactId"))
-            ver = self.getNodeValue(par.getElementsByTagName("version"))
-            relPath = self.getNodeValue(par.getElementsByTagName("relativePath"))
+            grp = None
+            art = None
+            ver = None
+            relPath = None
+            for child in par[0].childNodes:
+                local = child.localName
+                if local == "groupId":
+                    grp = child.firstChild.nodeValue
+                elif local == "artifactId":
+                    art = child.firstChild.nodeValue
+                elif local == "version":
+                    ver = child.firstChild.nodeValue
+                elif local == "relativePath":
+                    relPath = child.firstChild.nodeValue
             parent = Pom(grp, art, ver, relPath)
-                
-        pomGrp = self.getNodeValue(dom.getElementsByTagName("groupId"))
-        pomArt = self.getNodeValue(dom.getElementsByTagName("artifactId"))
-        pomVer = self.getNodeValue(dom.getElementsByTagName("version"))
+        
+        pomGrp = None
+        pomArt = None
+        pomVer = None
+        
+        for child in dom.getElementsByTagName("project")[0].childNodes:
+            local = child.localName
+            if local == "groupId":
+                pomGrp = child.firstChild.nodeValue
+            elif local == "artifactId":
+                pomArt = child.firstChild.nodeValue
+            elif local == "version":
+                pomVer = child.firstChild.nodeValue
         
         depMan = dom.getElementsByTagName("dependencyManagement")
         if depMan:
@@ -90,6 +107,7 @@ class TreeCreation(object):
                 
     def resolveTreeStructure(self, listOfPoms):
         for pom in listOfPoms:
+            print(pom.getFileLocation())
             pomArt = pom.getArtifactId()
             pomGrp = pom.getGroupId()
             
@@ -105,27 +123,16 @@ class TreeCreation(object):
                 tmpnode.setData(pom)
             ''' ####################'''
                     
-            '''        
-            parentPom = pom.getParentPom()
-            if parentPom != None:
-                grpId = parentPom.getGroupId()
-                artId = parentPom.getArtifactId()
-                parentPom1 = self.getNodeWith(artId, grpId)
-                if parentPom1 != None:
-                    tmpnode.setParentNode(parentPom1)
-                else:
-                    parentPom1 = PomTreeNode(artId, grpId, NodeEnum.USERPOM, None)
-                    self.nodeList.append(parentPom1)
-                    tmpnode.setParentNode(parentPom1)
-            '''        
-                    
-            '''determines if pom has parent, if it does, determine if in nodeList and add as parentNode '''
+            '''determines if pom has parent, if it does, determine if in nodeList and add as parentNode'''
             if pom.getParentPom():
                 parPom = pom.getParentPom()
-                par = self.inNodeList(self.nodeList, PomTreeNode(parPom.getArtifactId(), parPom.getGroupId(), NodeEnum.USERPOM, None))
-                tmpnode.setParentNode(par)
-                par.addChildNodes(tmpnode)
-            '''#################### '''
+                if (pomArt == parPom.getArtifactId) and (pomGrp == parPom.getGroupId):
+                    pass
+                else:
+                    par = self.inNodeList(self.nodeList, PomTreeNode(parPom.getArtifactId(), parPom.getGroupId(), NodeEnum.USERPOM, None)) 
+                    #par = self.getNodeWith(parPom.getArtifactId, parPom.getGroupId) if not None else PomTreeNode(parPom.getArtifactId(), parPom.getGroupId(), NodeEnum.USERPOM, None)
+                    tmpnode.setParentNode(par)
+                    par.addChildNodes(tmpnode)
                 
             
             ''' determine if any nodes match the dependencies and then add dep nodes accordingly'''
@@ -134,7 +141,7 @@ class TreeCreation(object):
                 for inner in listOfPoms:
                     if (inner.getGroupId() == dep.getGroupId()) and (inner.getArtifactId() == dep.getArtifactId()):                        
                         ''' inner is dependency, make node which refers to this.'''
-                        foundNode = self.inNodeList(self.nodeList, PomTreeNode(inner.getArtifactId, inner.getGroupId(), NodeEnum.USERPOM, None)) 
+                        foundNode = self.inNodeList(self.nodeList, PomTreeNode(inner.getArtifactId(), inner.getGroupId(), NodeEnum.USERPOM, None)) 
                         tmpnode.addDependencyNode(foundNode)
                         foundNode.addReverseDependencyNode(tmpnode)
                         notfound = False
@@ -142,6 +149,11 @@ class TreeCreation(object):
                 # Add reverse dependency assignment
                 if notfound is True:
                     depNode = self.inNodeList(self.nodeList, PomTreeNode(dep.getArtifactId(), dep.getGroupId(), NodeEnum.EXTDEP, None))
+                    
+                    # Something causing None or bad type to be thrown into setter
+                    
+                    print("artid "  + depNode.getArtifactId())
+                    
                     tmpnode.addDependencyNode(depNode)
                     depNode.addReverseDependencyNode(tmpnode)
                     pass
@@ -159,6 +171,7 @@ class TreeCreation(object):
     
     
     def inNodeList(self, nodeList, nodeToFind):
+        assert type(nodeToFind) is PomTreeNode
         for node in nodeList:
             if (node.getGroupId() == nodeToFind.getGroupId()) and (node.getArtifactId() == nodeToFind.getArtifactId()):
                 self.nodeList.append(node)
@@ -185,7 +198,7 @@ class TreeCreation(object):
     def resolveNodeRelations(self, potentialRootNode):
         
         parent = potentialRootNode.getParent()
-        if parent != None:
+        if parent != None and parent != potentialRootNode:
             print(parent.getArtifactId())
             self.resolveNodeRelations(parent)
         elif potentialRootNode.getReverseDependencyNodes():

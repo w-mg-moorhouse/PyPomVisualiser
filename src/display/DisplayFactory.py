@@ -5,7 +5,7 @@ Created on 31 Mar 2015
 '''
 from os import name
 
-from src.display.Win32Display import *
+from src.display.TKinterDisplay import *
 
 class DisplayFactory(object):
     '''
@@ -14,7 +14,7 @@ class DisplayFactory(object):
     @staticmethod
     def getDisplayMechanism():
         if name is "nt":
-            display = Win32Display()
+            display = TKinterDisplay()
             return display
         else:
             '''Not nt therefore likely to be posix'''

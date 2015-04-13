@@ -49,15 +49,10 @@ class PomTreeNode(object):
         return self.childnodes
     
     def getDependencies(self):
-        for each in self.dependencyNodes:
-            print("dep " + each.getArtifactId())
-            
         return self.dependencyNodes
     
     def addDependencyNode(self, node):
         assert type(node) is PomTreeNode
-        for each in self.dependencyNodes:
-            print("dep " + each.getArtifactId())
         if node not in self.dependencyNodes:
             self.dependencyNodes.append(node)
     
@@ -68,4 +63,16 @@ class PomTreeNode(object):
         assert type(node) is PomTreeNode
         if node not in self._reverseDependencies:
             self._reverseDependencies.append(node)
-    
+
+    def toString(self):
+        output = "Node out:"
+        output += "art :" + self.artifactId if not None else "Empty"
+        output += "group :" + self.groupId if not None else "Empty"
+        if self.parentNode:
+            output += "parentNode :" + self.parentNode.toString()
+        for dep in self.dependencyNodes:
+            dep.toString()
+        for dep in self._reverseDependencies:
+            dep.toString()
+        for child in self.childnodes:
+            child.toString()

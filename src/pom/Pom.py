@@ -22,7 +22,10 @@ class Pom(object):
         '''
     
     def getGroupId(self):
-        return self._groupId
+        if self._groupId == None:
+            return ""
+        else:
+            return self._groupId
     
     def getArtifactId(self):
         return self._artifactId
