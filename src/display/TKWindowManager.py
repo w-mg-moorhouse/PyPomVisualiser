@@ -4,7 +4,7 @@ Created on 9 Apr 2015
 @author: WMOORHOU
 '''
 
-from display.DisplayFactory import DisplayFactory
+from src.display.DisplayFactory import DisplayFactory
 
 class WindowManager(object):
     '''
@@ -33,30 +33,18 @@ class WindowManager(object):
             y_loc = (level+1)*self.spacing
             width = self.baseSize * 1.5
             self.rendered[node] = self._display.drawSquare(x_loc, y_loc, width, self.baseSize, "#FFFF00")
-            self._display.drawText(x_loc, y_loc, width, self.concatNodeInfo(node))
-            
+            self._display.drawTextInId(self.rendered[node], node.toShortString())
         else:
-            if level not in self.levelCounter:
-                self.levelCounter[level] = 0
-            else:
-                self.levelCounter[level] = self.levelCounter[level] + 1
-                
             if not self.isNodeRendered(node):
+                if level not in self.levelCounter:
+                    self.levelCounter[level] = 0
+                else:
+                    self.levelCounter[level] = self.levelCounter[level] + 1
                 x_loc = self.levelCounter[level]*self.spacing
                 y_loc = (level+1)*self.spacing
                 width = self.baseSize * 1.5
-                self.rendered[node] = self._display.drawCircle(x_loc, y_loc, width, self.baseSize, node.getType().value)
-                self._display.drawText(x_loc, y_loc, width, self.concatNodeInfo(node))
-                
-    
-    def concatNodeInfo(self, node):
-        content = ""
-        content += node.getArtifactId() + "\n"
-        if node.getGroupId() == None:
-            pass
-        content += node.getGroupId() + "\n"
-        #content += node.getVersion()
-        return content
+                self.rendered[node] = self._display.drawCircle(x_loc, y_loc, width, self.baseSize, node.getType().value, node.toShortString())
+                self._display.drawTextInId(self.rendered[node], node.toShortString())
     
     def connectNodes(self, master, slave):
         masterId = self.rendered.get(master)
@@ -64,6 +52,7 @@ class WindowManager(object):
         if masterId and slaveId:
             print(masterId)
             print(slaveId)
+            # Needs to be associated with the node attached to
             lineval = self._display.connectIdWithLine(masterId, slaveId, slave.getType().value)
         else:
             print("Node values could not be extracted from render list, no joining will be done")        
@@ -78,12 +67,3 @@ class WindowManager(object):
     def finalise(self):
         self._display.runDisplay()
         pass
-
-
-
-
-def nodeInformation(node):
-    nodeStrings = []
-    def nodeInfo():
-        nodeStrings.append(node.getArtifactId())
-    return nodeStrings

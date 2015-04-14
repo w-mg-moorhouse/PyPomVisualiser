@@ -64,6 +64,16 @@ class PomTreeNode(object):
         if node not in self._reverseDependencies:
             self._reverseDependencies.append(node)
 
+    def toShortString(self):
+        output = "artifact: " + (self.artifactId if not None else "Empty") + "\n"
+        output += "group: " + (self.groupId if not None else "Empty") + "\n"
+        data = self.getData()
+        if data != None:
+            data = data.getVersion()
+            if data != None:
+                output += "version: " + (data if not None else "Empty") + "\n"
+        return output
+
     def toString(self):
         output = "Node out:"
         output += "art :" + self.artifactId if not None else "Empty"
