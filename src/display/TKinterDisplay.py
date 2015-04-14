@@ -120,7 +120,7 @@ class TKinterDisplay(Display):
             y = idtuple[1]
             frm = Frame(self.local_canv)
             frm.grid(row=0, column=0)
-            Label(frm, text=content, background="#CCFFCC", borderwidth=6, relief="ridge").grid(row=0,column=0)
+            Label(frm, text=content, background="#CCFFCC", borderwidth=6, relief="ridge", justify="left").grid(row=0,column=0)
             self.currentlyRenderedWindow = self.local_canv.create_window(x, y, window=frm)
             localId = self.currentlyRenderedWindow
             Button(frm, text="Close", command= lambda :  self.remove(localId)).grid(row=4,column=0)

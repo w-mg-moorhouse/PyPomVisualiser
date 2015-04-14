@@ -43,7 +43,7 @@ class WindowManager(object):
                 x_loc = self.levelCounter[level]*self.spacing
                 y_loc = (level+1)*self.spacing
                 width = self.baseSize * 1.5
-                self.rendered[node] = self._display.drawCircle(x_loc, y_loc, width, self.baseSize, node.getType().value, node.toShortString())
+                self.rendered[node] = self._display.drawCircle(x_loc, y_loc, width, self.baseSize, node.getType().value, node.toString())
                 self._display.drawTextInId(self.rendered[node], node.toShortString())
     
     def connectNodes(self, master, slave):
