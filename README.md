@@ -14,6 +14,6 @@ Requirements:
   TKinter (On APT backed linux distros this can be acquired with 'sudo apt-get install python3-tk')
 
 Run using:
-Python3 src/PyPomArgparse.py <location of a pom>
+Python3 run.py <location of a pom>
 
 Will be packaged better in the future!
