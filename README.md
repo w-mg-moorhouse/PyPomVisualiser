@@ -11,7 +11,7 @@ Getting Started
 
 Requirements:
   
-  Python 3 (including a correctly set PYTHONPATH to the python 3 libs 'export PYTHONPATH=/usr/lib/python3/')
+  Python 3.4 (including a correctly set PYTHONPATH to the python 3 libs 'export PYTHONPATH=/usr/lib/python3.4/') Would suggest running in pyenv so not to interfere with system python (https://github.com/yyuu/pyenv#installation)
   
   TKinter (On APT backed linux distros this can be acquired with 'sudo apt-get install python3-tk')
   
