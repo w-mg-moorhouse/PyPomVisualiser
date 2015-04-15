@@ -3,7 +3,7 @@ Created on 31 Mar 2015
 
 @author: WMOORHOU
 '''
-from src.display.TKWindowManager import WindowManager
+from pypomvisualiser.display.TKWindowManager import WindowManager
 
 class Visualiser(object):
     '''

@@ -5,8 +5,8 @@ Created on 31 Mar 2015
 '''
 
 from xml.dom.minidom import parse
-from src.pom.Pom import Pom, PomDependency
-from src.pom.PomTreeNode import PomTreeNode
+from pypomvisualiser.pom.Pom import Pom, PomDependency
+from pypomvisualiser.pom.PomTreeNode import PomTreeNode
 from enum import Enum
 
 class PomParser(object):

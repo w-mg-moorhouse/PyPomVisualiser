@@ -4,7 +4,7 @@ Created on 31 Mar 2015
 @author: WMOORHOU
 '''
 from tkinter import Tk, Canvas, Scrollbar, Label, CURRENT, Button, Frame
-from src.display.DisplayTemplate import Display
+from pypomvisualiser.display.DisplayTemplate import Display
 from abc import abstractmethod
 
 class TKinterDisplay(Display):

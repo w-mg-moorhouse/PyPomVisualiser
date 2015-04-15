@@ -1,24 +1,27 @@
-from distutils.core import setup
+import ez_setup
+ez_setup.use_setuptools()
+
+from setuptools import setup, find_packages
 
 setup(
     # Application name:
     name="PyPomVisualiser",
 
     # Version number (initial):
-    version="0.1.0",
+    version="0.7.0",
 
     # Application author details:
     author="William Moorhouse",
     author_email="w-mg-moorhouse@gmail.com",
-
+    scripts = ["pypomv.py"],
     # Packages
-    package_dir= {'': 'src'},
+    packages = find_packages(),
 
     # Include additional files into the package
     include_package_data=True,
 
     # Details
-    #url="http://pypi.python.org/pypi/MyApplication_v010/",
+    url="https://github.com/w-mg-moorhouse/PyPomVisualiser",
 
     #
     license="LICENSE",
@@ -28,6 +31,6 @@ setup(
 
     # Dependent packages (distributions)
     install_requires=[
-        "tkinter"
+        #"tkinter"
     ],
 )

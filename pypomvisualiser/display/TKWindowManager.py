@@ -4,7 +4,7 @@ Created on 9 Apr 2015
 @author: WMOORHOU
 '''
 
-from src.display.DisplayFactory import DisplayFactory
+from pypomvisualiser.display.DisplayFactory import DisplayFactory
 
 class WindowManager(object):
     '''
