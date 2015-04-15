@@ -3,7 +3,7 @@ Created on 31 Mar 2015
 
 @author: WMOORHOU
 '''
-from tkinter import Tk, Canvas, Scrollbar, Label, CURRENT, Button, Frame
+from tkinter import Tk, Canvas, Scrollbar, Label, CURRENT, Button, Frame, Text
 from src.display.DisplayTemplate import Display
 from abc import abstractmethod
 
@@ -18,6 +18,7 @@ class TKinterDisplay(Display):
     '''
     def __init__(self, lineThickness=4):
         master = Tk()
+        master.maxsize(1920, 1080)
         self.rendered = dict()
         self.currentlyRenderedWindow = None
         self.lineThickness = lineThickness
@@ -34,19 +35,23 @@ class TKinterDisplay(Display):
         
         ''''''
     @abstractmethod    
-    def drawSquare(self, x_loc, y_loc, width, height, colour=None, function=None):
+    def drawSquare(self, x_loc, y_loc, width, height, colour=None, content=None):
         x2 = x_loc + width
         y2 = y_loc + height
-        return self.local_canv.create_rectangle(x_loc, y_loc, x2, y2, width=self.lineThickness, fill=colour)
+        square = self.local_canv.create_rectangle(x_loc, y_loc, x2, y2, width=self.lineThickness, fill=colour, activeoutline="white")
+        def handler(event, self=self, content=content):
+                return self.onClick(event, content)
+        self.local_canv.tag_bind(square, "<ButtonPress-1>", handler)
+        return square
     
     @abstractmethod
     def drawCircle(self, x_loc, y_loc, width, height, colour=None, content=None):
-            circle = self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness, fill=colour, activeoutline="white")
-            
-            def handler(event, self=self, content=content):
-                return self.onClick(event, content)
-            self.local_canv.tag_bind(circle, "<ButtonPress-1>", handler)
-            return circle
+        circle = self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness, fill=colour, activeoutline="white")
+        
+        def handler(event, self=self, content=content):
+            return self.onClick(event, content)
+        self.local_canv.tag_bind(circle, "<ButtonPress-1>", handler)
+        return circle
     
     @abstractmethod
     def drawTextInId(self, componentId, content):
@@ -119,8 +124,11 @@ class TKinterDisplay(Display):
             x = idtuple[0]
             y = idtuple[1]
             frm = Frame(self.local_canv)
+            #yScroll = Scrollbar(frm, orient="vertical", command=frm.yview)
+            #yScroll.grid(row=0, column=1)
             frm.grid(row=0, column=0)
             Label(frm, text=content, background="#CCFFCC", borderwidth=6, relief="ridge", justify="left").grid(row=0,column=0)
+            
             self.currentlyRenderedWindow = self.local_canv.create_window(x, y, window=frm)
             localId = self.currentlyRenderedWindow
             Button(frm, text="Close", command= lambda :  self.remove(localId)).grid(row=4,column=0)

@@ -32,7 +32,7 @@ class WindowManager(object):
             x_loc = 0
             y_loc = (level+1)*self.spacing
             width = self.baseSize * 1.5
-            self.rendered[node] = self._display.drawSquare(x_loc, y_loc, width, self.baseSize, "#FFFF00")
+            self.rendered[node] = self._display.drawSquare(x_loc, y_loc, width, self.baseSize, "#FFFF00", node.toString())
             self._display.drawTextInId(self.rendered[node], node.toShortString())
         else:
             if not self.isNodeRendered(node):

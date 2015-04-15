@@ -17,5 +17,5 @@ class DisplayFactory(object):
             display = TKinterDisplay()
             return display
         else:
-            '''Not nt therefore likely to be posix'''
-            return
+            display = TKinterDisplay()
+            return display

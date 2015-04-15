@@ -19,7 +19,7 @@ It defines classes_and_methods
 
 import sys
 import os
-from src.ProjectActions import ProjectActions
+from ProjectActions import ProjectActions
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -88,13 +88,6 @@ USAGE
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
         return 0
-    except Exception:
-        if DEBUG or TESTRUN:
-            raise(Exception)
-        indent = len(program_name) * " "
-        sys.stderr.write(program_name + ": " + repr(Exception) + "\n")
-        sys.stderr.write(indent + "  for help use --help")
-        return 2
 
 if __name__ == "__main__":
     if DEBUG:
