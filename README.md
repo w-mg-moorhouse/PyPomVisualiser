@@ -10,8 +10,11 @@ The eventual aim is to add capability to manipulate the pom from the visualisati
 Getting Started
 
 Requirements:
-  Python 3
+  
+  Python 3 (including a correctly set PYTHONPATH to the python 3 libs 'export PYTHONPATH=/usr/lib/python3/')
+  
   TKinter (On APT backed linux distros this can be acquired with 'sudo apt-get install python3-tk')
+  
 
 Run using:
 Python3 run.py <location of a pom>
