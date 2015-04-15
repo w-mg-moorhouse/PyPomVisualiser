@@ -7,7 +7,7 @@ The structure will then be output to a platform independent window for review.
 
 The eventual aim is to add capability to manipulate the pom from the visualisation screen, certainly for simple things like version changes, if not full dependency management.
 
-Getting Started
+Basic Getting Started
 
 Requirements:
   
@@ -18,6 +18,14 @@ Requirements:
 
 Run using:
 Python3 run.py <location of a pom>
+
+#Package Installation instructions
+cd <downloaded location>/PyPomVisualiser
+Install using: python setup.py install
+
+This may need to be run with enhanced privileges.
+
+Can be run with pypomv.py
 
 Will be packaged better in the future!
 
