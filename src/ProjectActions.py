@@ -3,7 +3,7 @@ Created on 31 Mar 2015
 
 @author: WMOORHOU
 '''
-from src.ProjectScraper import ProjectScraper#
+from src.ProjectScraper import ProjectScraper
 from src.pom.PomParser import PomParser, TreeCreation
 from src.display.Visualiser import Visualiser
 

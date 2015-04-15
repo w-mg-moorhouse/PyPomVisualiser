@@ -19,7 +19,7 @@ It defines classes_and_methods
 
 import sys
 import os
-from ProjectActions import ProjectActions
+from src.ProjectActions import ProjectActions
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
