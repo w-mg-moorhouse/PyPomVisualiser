@@ -11,7 +11,7 @@ Getting Started
 
 Requirements:
   
-  Python 3 (including a correctly set PYTHONPATH to the python 3 libs 'export PYTHONPATH=/usr/lib/python3/')
+  Python 3.4 
   
   TKinter (On APT backed linux distros this can be acquired with 'sudo apt-get install python3-tk')
   
@@ -20,3 +20,8 @@ Run using:
 Python3 run.py <location of a pom>
 
 Will be packaged better in the future!
+
+#Having issues with installation?
+Would suggest running Python in pyenv so not to interfere with system python (https://github.com/yyuu/pyenv#installation). You will also need to install tk (sudo apt-get install tk8.6-dev) so the python built from source (using pyenv) can find the headers and compile this module.
+
+
