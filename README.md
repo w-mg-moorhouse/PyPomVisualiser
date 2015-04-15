@@ -7,3 +7,16 @@ The structure will then be output to a platform independent window for review.
 
 The eventual aim is to add capability to manipulate the pom from the visualisation screen, certainly for simple things like version changes, if not full dependency management.
 
+Getting Started
+
+Requirements:
+  
+  Python 3 (including a correctly set PYTHONPATH to the python 3 libs 'export PYTHONPATH=/usr/lib/python3/')
+  
+  TKinter (On APT backed linux distros this can be acquired with 'sudo apt-get install python3-tk')
+  
+
+Run using:
+Python3 run.py <location of a pom>
+
+Will be packaged better in the future!
