@@ -126,6 +126,7 @@ class TKinterDisplay(Display):
             self.local_canv.configure(width=reconWidth)
             self.local_canv.configure(height=reconHeight)
             self.local_canv.configure(scrollregion=self.local_canv.bbox("all"))
+            self.local_canv.update_idletasks()
     
     def onClick(self, event, content):
         self.createWindowOnId(self.local_canv.find_withtag(CURRENT), content)

@@ -152,7 +152,7 @@ class TreeCreation(object):
                         break
                 # Add reverse dependency assignment
                 if notfound is True:
-                    depNode = self.inNodeList(self.nodeList, PomTreeNode(dep.getArtifactId(), dep.getGroupId(), NodeEnum.EXTDEP, None))
+                    depNode = self.inNodeList(self.nodeList, PomTreeNode(dep.getArtifactId(), dep.getGroupId(), NodeEnum.EXTDEP, dep))
                     
                     # Something causing None or bad type to be thrown into setter
                     print("artid " + depNode.getArtifactId())
