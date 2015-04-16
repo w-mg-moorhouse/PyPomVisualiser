@@ -3,7 +3,7 @@ Created on 31 Mar 2015
 
 @author: WMOORHOU
 '''
-from tkinter import Tk, Canvas, Scrollbar, Label, CURRENT, Button, Frame
+from tkinter import Tk, Canvas, Scrollbar, Label, CURRENT, Button, Frame, N, S, E, W
 from pypomvisualiser.display.DisplayTemplate import Display
 from abc import abstractmethod
 
@@ -16,7 +16,7 @@ class TKinterDisplay(Display):
     '''
     Constructor
     '''
-    def __init__(self, lineThickness=4):
+    def __init__(self, lineThickness=3):
         master = Tk()
         master.maxsize(1920, 1080)
         self.rendered = dict()
@@ -35,53 +35,67 @@ class TKinterDisplay(Display):
         
         ''''''
     @abstractmethod    
-    def drawSquare(self, x_loc, y_loc, width, height, colour=None, content=None):
+    def drawSquare(self, x_loc, y_loc, width, height, tags=None, colour=None, content=None):
         x2 = x_loc + width
         y2 = y_loc + height
-        square = self.local_canv.create_rectangle(x_loc, y_loc, x2, y2, width=self.lineThickness, fill=colour, activeoutline="white")
+        square = self.local_canv.create_rectangle(x_loc, y_loc, x2, y2, width=self.lineThickness, tags=tags, fill=colour, activeoutline="white")
         def handler(event, self=self, content=content):
                 return self.onClick(event, content)
-        self.local_canv.tag_bind(square, "<ButtonPress-1>", handler)
+        self.local_canv.tag_bind(square, "<ButtonRelease-1>", handler)
         return square
     
     @abstractmethod
-    def drawCircle(self, x_loc, y_loc, width, height, colour=None, content=None):
-        circle = self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness, fill=colour, activeoutline="white")
+    def drawCircle(self, x_loc, y_loc, width, height, tags=None , colour=None, content=None):
+        circle = self.local_canv.create_oval(x_loc, y_loc, x_loc + width, y_loc + height, width=self.lineThickness, tags=tags, fill=colour, activeoutline="white")
         
         def handler(event, self=self, content=content):
             return self.onClick(event, content)
-        self.local_canv.tag_bind(circle, "<ButtonPress-1>", handler)
+        self.local_canv.tag_bind(circle, "<ButtonRelease-1>", handler)
         return circle
     
     @abstractmethod
-    def drawTextInId(self, componentId, content):
-        id1tuple = self.getCoords(componentId)
-        x1 = id1tuple[0] + ((id1tuple[2] - id1tuple[0])/2)
-        y1 = id1tuple[1] + ((id1tuple[3] - id1tuple[1])/2)       
-        return self.drawText(x1, y1, (id1tuple[2] - id1tuple[0]), content)
+    def drawTextInId(self, tagTocentreOn, tagsToAddTo, content, funcContent):
+        id1tuple = self.getCoords(tagTocentreOn)
+        x1 = id1tuple[0] + ((id1tuple[2] - id1tuple[0]) / 2)
+        y1 = id1tuple[1] + ((id1tuple[3] - id1tuple[1]) / 2)       
+        txt = self.drawText(x1, y1, (id1tuple[2] - id1tuple[0]), content, tagsToAddTo)
+        
+        def handler(event, self=self, content=funcContent):
+            return self.onClick(event, content)
+        
+        self.local_canv.tag_bind(txt, "<ButtonRelease-1>", handler)
+        return txt
+    
+    def hideId(self, objectId):
+        self.local_canv.itemconfigure(objectId, state="hidden")
+        pass
+        
+    def showId(self, objectId):
+        self.local_canv.itemconfigure(objectId, state="normal")
+        pass
     
     def _sampleDraw(self):
         self.local_canv.create_oval(0, 0, 0, 0, width=0)
     
-    def drawText(self, x, y, width, content):
-        val = self.local_canv.create_text(x, y, width=width, text=content, justify="center", font="Helvetica 12 bold", anchor="center")
+    def drawText(self, x, y, width, content, tag):
+        val = self.local_canv.create_text(x, y, width=width, text=content, tags=tag, justify="center", font="Helvetica 12 bold", anchor="center")
         self.local_canv.tag_raise(val)
         return val
     
     @abstractmethod
-    def drawLine(self, x1, y1, x2, y2, colour="black"):
-        line = self.local_canv.create_line(x1, y1, x2, y2, width=self.lineThickness, arrow="first", fill=colour)
+    def drawLine(self, x1, y1, x2, y2, tags=None, colour="black"):
+        line = self.local_canv.create_line(x1, y1, x2, y2, tags=tags, width=self.lineThickness, arrow="first", fill=colour)
         self.local_canv.tag_lower(line)
-        return #line
+        return  # line
     
-    def connectIdWithLine(self, id1, id2, colour=None):
+    def connectIdWithLine(self, id1, id2, tags=None, colour=None):
         id1tuple = self.getCoords(id1)
-        x1 = id1tuple[0] + ((id1tuple[2] - id1tuple[0])/2)
-        y1 = id1tuple[1] + ((id1tuple[3] - id1tuple[1])/2)
+        x1 = id1tuple[0] + ((id1tuple[2] - id1tuple[0]) / 2)
+        y1 = id1tuple[1] + ((id1tuple[3] - id1tuple[1]) / 2)
         id2tuple = self.getCoords(id2)
-        x2 = id2tuple[0] + ((id2tuple[2] - id2tuple[0])/2)
-        y2 = id2tuple[1] + ((id2tuple[3] - id2tuple[1])/2)
-        return self.drawLine(x1, y1, x2, y2, colour)
+        x2 = id2tuple[0] + ((id2tuple[2] - id2tuple[0]) / 2)
+        y2 = id2tuple[1] + ((id2tuple[3] - id2tuple[1]) / 2)
+        return self.drawLine(x1, y1, x2, y2, tags, colour)
     
     @abstractmethod
     def remove(self, num):
@@ -90,6 +104,9 @@ class TKinterDisplay(Display):
     @abstractmethod    
     def runDisplay(self):
         self.local_canv.mainloop()
+    
+    def move(self, tag, xamount, yamount):
+        self.local_canv.move(tag, xamount, yamount)
     
     def getCoords(self, ident):
         return self.local_canv.coords(ident)
@@ -118,18 +135,48 @@ class TKinterDisplay(Display):
         self.remove(CURRENT)
         
     def createWindowOnId(self, itemId, content):
-        self.remove(self.currentlyRenderedWindow)
+        if self.currentlyRenderedWindow != None:
+            self.currentlyRenderedWindow()
+        # self.remove(self.currentlyRenderedWindow)
         idtuple = self.local_canv.coords(itemId)
         if idtuple:
             x = idtuple[0]
             y = idtuple[1]
             frm = Frame(self.local_canv)
-            #yScroll = Scrollbar(frm, orient="vertical", command=frm.yview)
-            #yScroll.grid(row=0, column=1)
+
             frm.grid(row=0, column=0)
-            Label(frm, text=content, background="#CCFFCC", borderwidth=6, relief="ridge", justify="left").grid(row=0,column=0)
+            canv = Canvas(frm)
+            canv.grid(row=0, column=0)
+            vscroll = Scrollbar(frm, orient="vertical", command=canv.yview)
+            hscroll = Scrollbar(frm, orient="horizontal", command=canv.xview)
+            vscroll.grid(row=0, column=1, sticky=N + S)
+            hscroll.grid(row=1, column=0, sticky=E + W)
+            canv["xscrollcommand"] = hscroll.set
+            canv["yscrollcommand"] = vscroll.set
+            aframe = Frame(canv)
+            canv.create_window(x, y, window=aframe, anchor="center")
+            Label(aframe, text=content, anchor="center", background="#CCFFCC", borderwidth=6, relief="ridge", justify="left").grid(row=1, column=0)
+            self.local_canv.update_idletasks()
+            canv["scrollregion"] = canv.bbox("all")
+            self.currentlyRenderedWindow = frm.winfo_id()
             
-            self.currentlyRenderedWindow = self.local_canv.create_window(x, y, window=frm)
-            localId = self.currentlyRenderedWindow
-            Button(frm, text="Close", command= lambda :  self.remove(localId)).grid(row=4,column=0)
+            #Move window to the correct Location
+            
+            
+            def destroyAll():
+                canv.destroy()
+                aframe.destroy()
+                vscroll.destroy()
+                hscroll.destroy()
+                frm.destroy()
+                
+            self.currentlyRenderedWindow = destroyAll 
+            Button(frm, text="Close", command=lambda :  destroyAll()).grid(row=2, column=0)
+            
+            # yScroll = Scrollbar(frm, orient="vertical", command=frm.yview)
+            # yScroll.grid(row=0, column=1)
+            # frm.grid(row=0, column=0)
+            # Label(aframe, text=content, background="#CCFFCC", borderwidth=6, relief="ridge", justify="left").grid(row=0,column=0)
+            
+            # self.currentlyRenderedWindow = self.local_canv.create_window(x, y, window=frm)
             
